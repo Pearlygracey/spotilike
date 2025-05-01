@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* make sure viewport meta is in public/index.html:
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+*/
+body {
+  @apply bg-gradient-to-b from-black to-[#000428] text-white antialiased;
+}
