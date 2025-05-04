@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaPlay, FaPause, FaForward, FaBackward } from 'react-icons/fa'
 import { useAudioPlayer } from '../context/AudioPlayerContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 // duplicate your localTracks array here:
 const localTracks = [
@@ -14,6 +14,9 @@ const localTracks = [
 
 export default function NowPlayingBar() {
   const { currentTrack, isPlaying, progress, togglePlay, seek, audioRef } = useAudioPlayer()
+  const { pathname } = useLocation()   
+  // hide on the full Player screen
+  if (pathname.startsWith('/player/')) return null
   const [apiTracks, setApiTracks] = useState([])
   const [combined, setCombined] = useState(localTracks)
   const navigate = useNavigate()
