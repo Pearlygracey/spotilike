@@ -23,6 +23,7 @@ const itemVariants = {
 export default function Library() {
   const [search, setSearch] = useState('')
   const [apiTracks, setApiTracks] = useState([])
+  const [currentAudio, setCurrentAudio] = useState(null) // 👈 add this
 
   // fetch 4 extra songs from iTunes
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function Library() {
       className="min-h-screen pb-24 pt-8 px-4 bg-gradient-to-b from-black to-blue-900 text-white"
     >
       <h1 className="text-3xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#fb943b]">
-        Your Library
+        Your Playlist
       </h1>
 
       {/* Search */}
@@ -72,31 +73,53 @@ export default function Library() {
       {/* Rows */}
       <motion.div className="space-y-4" variants={containerVariants}>
         {filtered.map(track => (
-          <TrackRow key={track.id} track={track} />
+          <TrackRow
+            key={track.id}
+            track={track}
+            currentAudio={currentAudio}         // 👈 pass this
+            setCurrentAudio={setCurrentAudio}   // 👈 pass this
+          />
         ))}
-        {filtered.length === 0 && (
-          <p className="text-center text-white/50">No songs found.</p>
-        )}
       </motion.div>
+
     </motion.div>
   )
 }
 
-function TrackRow({ track }) {
+function TrackRow({ track, currentAudio, setCurrentAudio }) {
   const navigate = useNavigate()
   const audioRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  // stop on unmount
+
+  useEffect(() => {
+    if (currentAudio !== audioRef.current) {
+      setIsPlaying(false)
+    }
+  }, [currentAudio])
+  
   useEffect(() => () => {
     audioRef.current?.pause()
   }, [])
 
   const togglePlay = (e) => {
     e.stopPropagation()
-    if (!isPlaying) audioRef.current.play()
-    else audioRef.current.pause()
-    setIsPlaying(p => !p)
+
+    const thisAudio = audioRef.current
+
+    // Pause the current playing audio if it's different
+    if (currentAudio && currentAudio !== thisAudio) {
+      currentAudio.pause()
+    }
+
+    if (!isPlaying) {
+      thisAudio.play()
+      setCurrentAudio(thisAudio)
+    } else {
+      thisAudio.pause()
+    }
+
+    setIsPlaying(prev => !prev)
   }
 
   const goToPlayer = () => {
@@ -110,10 +133,8 @@ function TrackRow({ track }) {
       onClick={goToPlayer}
       className="relative flex items-center p-3 bg-white/10 backdrop-blur-sm rounded-xl transition cursor-pointer"
     >
-      {/* gradient left border */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#ED0068] to-[#D84278]" />
 
-      {/* Thumbnail */}
       <div className="w-12 h-12 rounded-lg overflow-hidden mr-4 flex-shrink-0">
         <img
           src={track.thumbnail}
@@ -130,12 +151,10 @@ function TrackRow({ track }) {
         />
       </div>
 
-      {/* Title */}
       <div className="flex-1">
         <p className="text-sm font-medium">{track.title}</p>
       </div>
 
-      {/* Play/Pause */}
       <button
         onClick={togglePlay}
         className="p-2 bg-gradient-to-r from-[#ED0068] to-[#D84278] rounded-full text-white shadow-lg"
@@ -146,8 +165,12 @@ function TrackRow({ track }) {
       <audio
         ref={audioRef}
         src={track.file}
-        onEnded={() => setIsPlaying(false)}
+        onEnded={() => {
+          setIsPlaying(false)
+          setCurrentAudio(null)
+        }}
       />
     </motion.div>
   )
 }
+

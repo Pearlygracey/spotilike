@@ -3,9 +3,12 @@
   import { HashRouter } from 'react-router-dom'
   import App from './App'
   import './index.css'
+  import { AudioPlayerProvider } from './context/AudioPlayerContext'
 
   ReactDOM.createRoot(document.getElementById('root')).render(
     <HashRouter>
-      <App />
+      <AudioPlayerProvider>
+        <App />
+      </AudioPlayerProvider>
     </HashRouter>
   )

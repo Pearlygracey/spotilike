@@ -12,8 +12,9 @@ import {
   FaArrowLeft
 } from 'react-icons/fa'
 
-// your tracks, now with thumbnail paths
-const tracks = [
+
+// your local tracks
+const localTracks = [
   {
     id: 'karera',
     title: 'Early Morning',
@@ -24,21 +25,21 @@ const tracks = [
   {
     id: 'multo',
     title: 'Break My Heart (Rameses B Remix)',
-    author: "Slushii, Sapientdream, & Rameses B",
+    author: 'Slushii, Sapientdream, & Rameses B',
     file: '/Multo.mp3',
     thumbnail: '/thumbnails/2.jpg'
   },
   {
     id: 'cant_stop',
-    title: "Groove Contol",
-    author: "Infraction",
+    title: 'Groove Control',
+    author: 'Infraction',
     file: "/Can't_Stop_The_Feeling.mp3",
     thumbnail: '/thumbnails/3.jpg'
   },
   {
     id: 'you_be_in_my_heart',
     title: "On The Top",
-    author: "Chillpeach",
+    author: 'Chillpeach',
     file: "/You'd_Be_In_My_Heart.mp3",
     thumbnail: '/thumbnails/4.jpg'
   }
@@ -47,9 +48,34 @@ const tracks = [
 export default function Player() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const trackList = tracks
-  const currentIndex = trackList.findIndex((t) => t.id === id)
-  const track = trackList[currentIndex] || trackList[0]
+
+  const [apiTracks, setApiTracks] = useState([])
+  const [combined, setCombined] = useState(localTracks)
+
+  // fetch API once
+  useEffect(() => {
+    fetch('https://itunes.apple.com/search?term=pop&entity=song&limit=4')
+      .then(res => res.json())
+      .then(data => {
+        const hits = data.results.map(item => ({
+          id: 'api-' + item.trackId,
+          title: item.trackName,
+          author: item.artistName,
+          file: item.previewUrl,
+          thumbnail: item.artworkUrl100
+        }))
+        setApiTracks(hits)
+      })
+      .catch(() => setApiTracks([]))
+  }, [])
+
+  // whenever apiTracks load, merge with local
+  useEffect(() => {
+    setCombined([...localTracks, ...apiTracks])
+  }, [apiTracks])
+
+  // find the track object by id param
+  const track = combined.find(t => t.id === id) || combined[0]
 
   const audioRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -59,26 +85,24 @@ export default function Player() {
   const [elapsed, setElapsed] = useState('0:00')
   const [duration, setDuration] = useState('0:00')
 
-  // play/pause on id change
+  // reset when id changes
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
+    const el = audioRef.current
+    if (el) {
+      el.pause()
+      el.currentTime = 0
       setProgress(0)
       setElapsed('0:00')
       setDuration('0:00')
-      if (isPlaying) audioRef.current.play()
+      if (isPlaying) el.play()
     }
   }, [id])
 
-  // update elapsed & progress
   const onTimeUpdate = () => {
     const el = audioRef.current
     if (!el) return
-    const prog = el.currentTime / el.duration || 0
-    setProgress(prog)
-
-    const fmt = (sec) => {
+    setProgress(el.currentTime / el.duration || 0)
+    const fmt = sec => {
       const m = Math.floor(sec / 60)
       const s = Math.floor(sec % 60)
       return `${m}:${s < 10 ? '0' : ''}${s}`
@@ -88,36 +112,39 @@ export default function Player() {
   }
 
   const togglePlay = () => {
-    if (!isPlaying) audioRef.current.play()
-    else audioRef.current.pause()
-    setIsPlaying((p) => !p)
+    const el = audioRef.current
+    if (!isPlaying) el.play()
+    else el.pause()
+    setIsPlaying(p => !p)
   }
   const skipForward = () => {
-    audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 10)
+    const el = audioRef.current
+    el.currentTime = Math.min(el.duration, el.currentTime + 10)
   }
   const skipBackward = () => {
-    audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10)
+    const el = audioRef.current
+    el.currentTime = Math.max(0, el.currentTime - 10)
   }
-  const toggleShuffle = () => setShuffle((s) => !s)
+  const toggleShuffle = () => setShuffle(s => !s)
   const toggleRepeat = () => {
-    setRepeat((r) => !r)
+    setRepeat(r => !r)
     audioRef.current.loop = !repeat
   }
-  const onSeek = (e) => {
+  const onSeek = e => {
     const val = parseFloat(e.target.value)
-    if (audioRef.current) {
-      audioRef.current.currentTime = val * audioRef.current.duration
-      setProgress(val)
-    }
+    const el = audioRef.current
+    el.currentTime = val * el.duration
+    setProgress(val)
   }
   const playNext = () => {
-    let nextIndex
-    if (shuffle) {
-      nextIndex = Math.floor(Math.random() * trackList.length)
-    } else {
-      nextIndex = (currentIndex + 1) % trackList.length
+    const list = combined
+    let next
+    if (shuffle) next = list[Math.floor(Math.random() * list.length)]
+    else {
+      const idx = list.findIndex(t => t.id === track.id)
+      next = list[(idx + 1) % list.length]
     }
-    navigate(`/player/${trackList[nextIndex].id}`)
+    navigate(`/player/${next.id}`)
     setIsPlaying(true)
   }
 
@@ -128,7 +155,6 @@ export default function Player() {
       transition={{ duration: 0.6 }}
       className="pb-24 px-4 pt-6 bg-gradient-to-b from-black to-blue-900 text-white min-h-screen flex flex-col items-center"
     >
-      {/* Back button */}
       <button
         onClick={() => navigate(-1)}
         className="self-start mb-4 text-xl p-2 rounded-full bg-white/10 backdrop-blur-sm"
@@ -136,18 +162,16 @@ export default function Player() {
         <FaArrowLeft />
       </button>
 
-      {/* Thumbnail & Title card */}
-      <div className="w-64 h-64 rounded-2xl mt-24 overflow-hidden mb-6 shadow-xl bg-white/10 backdrop-blur-sm flex-shrink-0">
+      <div className="w-64 h-64 mt-24 rounded-2xl overflow-hidden mb-6 shadow-xl bg-white/10 backdrop-blur-sm">
         <img
           src={track.thumbnail}
           alt={track.title}
           className="object-cover w-full h-full"
         />
       </div>
-      <h3 className="text-2xl font-semibold mb-2 text-center px-2">{track.title}</h3>
-      <p className="text-sm font-semibold mb-2 text-center px-2">{track.author}</p>
+      <h3 className="text-2xl font-semibold mb-1 text-center">{track.title}</h3>
+      <p className="text-sm text-center text-white/70 mb-4">{track.author}</p>
 
-      {/* Audio element */}
       <audio
         ref={audioRef}
         src={track.file}
@@ -155,7 +179,6 @@ export default function Player() {
         onEnded={playNext}
       />
 
-      {/* Progress + time */}
       <div className="w-full flex items-center text-xs font-mono text-white/70 mb-4 px-2">
         <span>{elapsed}</span>
         <input
@@ -170,35 +193,28 @@ export default function Player() {
         <span>{duration}</span>
       </div>
 
-      {/* Controls */}
       <div className="flex items-center justify-between w-full px-6 space-x-4">
         <button
           onClick={toggleShuffle}
-          className={`p-3 rounded-full transition ${shuffle ? 'bg-[#ED0068]' : 'bg-white/10 backdrop-blur-sm'}`}
+          className={`p-3 rounded-full ${shuffle ? 'bg-[#ED0068]' : 'bg-white/10 backdrop-blur-sm'}`}
         >
           <FaRandom />
         </button>
-        <button
-          onClick={skipBackward}
-          className="p-3 bg-white/10 backdrop-blur-sm rounded-full"
-        >
+        <button onClick={skipBackward} className="p-3 bg-white/10 backdrop-blur-sm rounded-full">
           <FaBackward />
         </button>
         <button
           onClick={togglePlay}
-          className="p-5 bg-gradient-to-r from-[#ED0068] to-[#D84278] rounded-full shadow-lg transform transition-transform hover:scale-110"
+          className="p-5 bg-gradient-to-r from-[#ED0068] to-[#D84278] rounded-full shadow-lg hover:scale-110 transform"
         >
           {isPlaying ? <FaPause /> : <FaPlay />}
         </button>
-        <button
-          onClick={skipForward}
-          className="p-3 bg-white/10 backdrop-blur-sm rounded-full"
-        >
+        <button onClick={skipForward} className="p-3 bg-white/10 backdrop-blur-sm rounded-full">
           <FaForward />
         </button>
         <button
           onClick={toggleRepeat}
-          className={`p-3 rounded-full transition ${repeat ? 'bg-[#ED0068]' : 'bg-white/10 backdrop-blur-sm'}`}
+          className={`p-3 rounded-full ${repeat ? 'bg-[#ED0068]' : 'bg-white/10 backdrop-blur-sm'}`}
         >
           <FaRedoAlt />
         </button>

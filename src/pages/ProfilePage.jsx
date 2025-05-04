@@ -64,7 +64,7 @@ export default function ProfilePage() {
       <motion.h1 variants={itemFade} className="text-3xl flex gap-2 font-bold mb-4">
         <img src="logo.png" className="w-10" alt="logo" />
         Hello,{' '}
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#D84278]">
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#eecf36]">
           ngani!
         </span>
       </motion.h1>
@@ -83,7 +83,7 @@ export default function ProfilePage() {
 
       {/* Popular Songs */}
       <motion.div variants={itemFade} className="mb-10">
-        <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#D84278]">
+        <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#feee40]">
           Popular Songs
         </h2>
         <div className="flex flex-wrap gap-4">
@@ -131,7 +131,7 @@ export default function ProfilePage() {
 
       {/* Top Albums */}
       <motion.div variants={itemFade} className="mb-8">
-        <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#D84278]">
+        <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#fbdf41]">
           Top Albums
         </h2>
         <div className="flex overflow-x-auto space-x-4 pb-2">
@@ -164,7 +164,7 @@ export default function ProfilePage() {
 
       {/* Recently Played */}
       <motion.div variants={itemFade} className="mb-8">
-        <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#D84278]">
+        <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#ffd042]">
           Recently Played
         </h2>
         <div className="space-y-3">
