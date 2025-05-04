@@ -1,31 +1,48 @@
 // src/pages/Library.jsx
 import React, { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaPlay, FaPause, FaSearch } from 'react-icons/fa'
+import { FaSearch, FaPlay, FaPause } from 'react-icons/fa'
 
-const tracks = [
-  { id: 'karera', title: 'Karera', file: '/Karera.mp3', thumbnail: '/thumbnails/karera.jpg' },
-  { id: 'multo', title: 'Multo', file: '/Multo.mp3', thumbnail: '/thumbnails/multo.jpg' },
-  { id: 'cant_stop', title: "Can't Stop The Feeling", file: "/Can't_Stop_The_Feeling.mp3", thumbnail: '/thumbnails/cant_stop.png' },
-  { id: 'you_be_in_my_heart', title: "You'd Be In My Heart", file: "/You'd_Be_In_My_Heart.mp3", thumbnail: '/thumbnails/you_be_in_my_heart.png' },
+const localTracks = [
+  { id: 'karera', title: 'Early Morning by Infraction', file: '/Karera.mp3', thumbnail: '/thumbnails/1.jpg', isLocal: true },
+  { id: 'multo', title: 'Break My Heart (Rameses B Remix)', file: '/Multo.mp3', thumbnail: '/thumbnails/2.jpg', isLocal: true },
+  { id: 'cant_stop', title: "Groove Control", file: "/Can't_Stop_The_Feeling.mp3", thumbnail: '/thumbnails/3.jpg', isLocal: true },
+  { id: 'you_be_in_my_heart', title: "On The Top", file: "/You'd_Be_In_My_Heart.mp3", thumbnail: '/thumbnails/4.jpg', isLocal: true },
 ]
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
-  show: {
-    opacity: 1, y: 0,
-    transition: { staggerChildren: 0.1, when: 'beforeChildren' }
-  }
+  show: { opacity: 1, y: 0, transition: { staggerChildren: 0.1 } }
 }
 const itemVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  show: { opacity: 1, scale: 1 },
+  hidden: { opacity: 0, x: -20 },
+  show: { opacity: 1, x: 0 }
 }
 
 export default function Library() {
   const [search, setSearch] = useState('')
-  const filtered = tracks.filter(t =>
+  const [apiTracks, setApiTracks] = useState([])
+
+  // fetch 4 extra songs from iTunes
+  useEffect(() => {
+    fetch('https://itunes.apple.com/search?term=pop&entity=song&limit=4')
+      .then(r => r.json())
+      .then(data => {
+        const hits = data.results.map(item => ({
+          id: 'api-' + item.trackId,
+          title: `${item.trackName} — ${item.artistName}`,
+          file: item.previewUrl,
+          thumbnail: item.artworkUrl100,
+          isLocal: false
+        }))
+        setApiTracks(hits)
+      })
+      .catch(() => setApiTracks([]))
+  }, [])
+
+  const allTracks = [...localTracks, ...apiTracks]
+  const filtered = allTracks.filter(t =>
     t.title.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -34,90 +51,103 @@ export default function Library() {
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="min-h-screen pb-24 px-4 pt-8 bg-gradient-to-b from-black to-blue-900 text-white"
+      className="min-h-screen pb-24 pt-8 px-4 bg-gradient-to-b from-black to-blue-900 text-white"
     >
-      <h1 className="text-3xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#D84278]">
+      <h1 className="text-3xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#ED0068] to-[#fb943b]">
         Your Library
       </h1>
 
       {/* Search */}
-      <div className="relative max-w-md mx-auto mb-8">
+      <div className="relative max-w-md mx-auto mb-6">
         <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70" />
         <input
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search songs..."
-          className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
+          className="w-full pl-12 pr-4 py-2 bg-white/10 border border-white/20 rounded-xl placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
         />
       </div>
 
-      {/* Grid */}
-      <motion.div
-        className="grid grid-cols-2 sm:grid-cols-3 gap-4"
-        variants={containerVariants}
-      >
+      {/* Rows */}
+      <motion.div className="space-y-4" variants={containerVariants}>
         {filtered.map(track => (
-          <TrackCard key={track.id} track={track} />
+          <TrackRow key={track.id} track={track} />
         ))}
         {filtered.length === 0 && (
-          <p className="col-span-full text-center text-white/50">No results found.</p>
+          <p className="text-center text-white/50">No songs found.</p>
         )}
       </motion.div>
     </motion.div>
   )
 }
 
-function TrackCard({ track }) {
+function TrackRow({ track }) {
+  const navigate = useNavigate()
   const audioRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  // stop audio when unmount
+  // stop on unmount
   useEffect(() => () => {
-    if (audioRef.current) audioRef.current.pause()
+    audioRef.current?.pause()
   }, [])
 
   const togglePlay = (e) => {
     e.stopPropagation()
-    e.preventDefault()
     if (!isPlaying) audioRef.current.play()
     else audioRef.current.pause()
     setIsPlaying(p => !p)
   }
 
+  const goToPlayer = () => {
+    navigate(`/player/${track.id}`)
+  }
+
   return (
     <motion.div
       variants={itemVariants}
-      whileHover={{ translateY: -4 }}
-      className="relative rounded-xl overflow-hidden shadow-lg group"
+      whileHover={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+      onClick={goToPlayer}
+      className="relative flex items-center p-3 bg-white/10 backdrop-blur-sm rounded-xl transition cursor-pointer"
     >
-      {/* border gradient */}
-      <div className="absolute inset-0 p-[2px] bg-gradient-to-r from-[#ED0068] to-[#D84278] rounded-xl pointer-events-none" />
+      {/* gradient left border */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#ED0068] to-[#D84278]" />
 
-      {/* card background */}
-      <Link
-        to={`/player/${track.id}`}
-        className="relative z-10 block bg-[#1F1F1F] rounded-lg overflow-hidden"
-      >
+      {/* Thumbnail */}
+      <div className="w-12 h-12 rounded-lg overflow-hidden mr-4 flex-shrink-0">
         <img
           src={track.thumbnail}
           alt={track.title}
-          className="object-cover w-full h-32 sm:h-40"
+          className="object-cover w-full h-full"
+          onError={e => {
+            if (!e.currentTarget.dataset.fallback) {
+              e.currentTarget.dataset.fallback = 'true'
+              e.currentTarget.src = track.isLocal
+                ? `/thumbnails/${track.id}.jpg`
+                : ''
+            }
+          }}
         />
-        <div className="p-3">
-          <p className="text-sm font-semibold mb-1">{track.title}</p>
-        </div>
-      </Link>
+      </div>
+
+      {/* Title */}
+      <div className="flex-1">
+        <p className="text-sm font-medium">{track.title}</p>
+      </div>
 
       {/* Play/Pause */}
       <button
         onClick={togglePlay}
-        className="absolute bottom-3 right-3 p-3 bg-gradient-to-r from-[#ED0068] to-[#D84278] rounded-full text-white shadow-lg opacity-0 group-hover:opacity-100 transition"
+        className="p-2 bg-gradient-to-r from-[#ED0068] to-[#D84278] rounded-full text-white shadow-lg"
       >
         {isPlaying ? <FaPause /> : <FaPlay />}
       </button>
 
-      <audio ref={audioRef} src={track.file} onEnded={() => setIsPlaying(false)} />
+      <audio
+        ref={audioRef}
+        src={track.file}
+        onEnded={() => setIsPlaying(false)}
+      />
     </motion.div>
   )
 }

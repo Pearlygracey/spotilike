@@ -59,7 +59,7 @@ export default function Homepage() {
         transition={{ duration: 1, delay: 0.5 }}
         className="absolute top-8 right-10"
       >
-        <img src="/logo.jpg" alt="Logo" className="w-24 h-auto drop-shadow-md" />
+        <img src="/logo.png" alt="Logo" className="ml-2.5 w-16 h-auto drop-shadow-md" />
       </motion.div>
 
       {/* Content */}
@@ -80,7 +80,7 @@ export default function Homepage() {
           className="text-lg font-light"
         >
           Discover the rich and colorful sounds of our heritage.  
-          Dive into curated playlists, traditional tunes, and the heart of Filipino music.
+          Dive into curated playlists, traditional tunes, and the heart of PLV Jpian's music.
         </motion.p>
 
         <motion.div

@@ -16,27 +16,31 @@ import {
 const tracks = [
   {
     id: 'karera',
-    title: 'Karera',
+    title: 'Early Morning',
+    author: 'Infraction',
     file: '/Karera.mp3',
-    thumbnail: '/thumbnails/karera.jpg'
+    thumbnail: '/thumbnails/1.jpg'
   },
   {
     id: 'multo',
-    title: 'Multo',
+    title: 'Break My Heart (Rameses B Remix)',
+    author: "Slushii, Sapientdream, & Rameses B",
     file: '/Multo.mp3',
-    thumbnail: '/thumbnails/multo.jpg'
+    thumbnail: '/thumbnails/2.jpg'
   },
   {
     id: 'cant_stop',
-    title: "Can't Stop The Feeling",
+    title: "Groove Contol",
+    author: "Infraction",
     file: "/Can't_Stop_The_Feeling.mp3",
-    thumbnail: '/thumbnails/cant_stop.png'
+    thumbnail: '/thumbnails/3.jpg'
   },
   {
     id: 'you_be_in_my_heart',
-    title: "You'd Be In My Heart",
+    title: "On The Top",
+    author: "Chillpeach",
     file: "/You'd_Be_In_My_Heart.mp3",
-    thumbnail: '/thumbnails/you_be_in_my_heart.png'
+    thumbnail: '/thumbnails/4.jpg'
   }
 ]
 
@@ -141,6 +145,7 @@ export default function Player() {
         />
       </div>
       <h3 className="text-2xl font-semibold mb-2 text-center px-2">{track.title}</h3>
+      <p className="text-sm font-semibold mb-2 text-center px-2">{track.author}</p>
 
       {/* Audio element */}
       <audio
