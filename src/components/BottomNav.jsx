@@ -14,7 +14,7 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav className="fixed bottom-4 inset-x-4 h-16 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl flex justify-around items-center z-50">
+    <nav className="fixed bottom-4 inset-x-4 h-16 bg-blue-950/80 backdrop-blur-lg border border-white/20 rounded-xl flex justify-around items-center z-50">
       {tabs.map((tab) => {
         const isActive = pathname === tab.to
         return (
